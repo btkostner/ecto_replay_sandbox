@@ -85,6 +85,8 @@ end
 
 ## Phoenix 1.7
 
+This repo requires Ecto 3.1, whilst Phoenix 1.7 requires Ecto 3.6.  This repository has been tested with Ecto 3.6.
+
 `test/support/data_case.ex` looks like this for Phoenix 1.7 :
 
 ```elixir
