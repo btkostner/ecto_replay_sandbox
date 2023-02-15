@@ -51,6 +51,8 @@ sandbox = Application.get_env(:my_app, MyApp.Repo)[:pool]
 sandbox.mode(MyApp.Repo, :manual)
 ```
 
+## Prior to Phoenix 1.7
+
 Do the same for your `test/support/xxx_case.ex` files, for example:
 Replace the following line:
 
@@ -80,6 +82,47 @@ setup tags do
   {:ok, conn: Phoenix.ConnTest.build_conn()}
 end
 ```
+
+## Phoenix 1.7
+
+`test/support/data_case.ex` looks like this for Phoenix 1.7 :
+
+```elixir
+  setup tags do
+    MyApp.DataCase.setup_sandbox(tags)
+    :ok
+  end
+
+  @doc """
+  Sets up the sandbox based on the test tags.
+  """
+  def setup_sandbox(tags) do
+    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(MyApp.Repo, shared: not tags[:async])
+    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+  end
+```
+
+Replace that with :
+
+```elixir
+  setup tags do
+    MyApp.DataCase.setup_sandbox(tags)
+    :ok
+  end
+
+  @doc """
+  Sets up the sandbox based on the test tags.
+  """
+  def setup_sandbox(tags) do
+    sandbox = Application.get_env(:myapp, MyApp.Repo)[:pool]
+    :ok = sandbox.checkout(MyApp.Repo)
+
+    unless tags[:async] do
+      sandbox.mode(MyApp.Repo, {:shared, self()})
+    end
+  end
+```
+
 
 This effectively removes the hardcoded usage of `Ecto.Adapters.SQL.Sandbox` with a dynamic lookup of the configured pool.
 
